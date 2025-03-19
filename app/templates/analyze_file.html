@@ -1,0 +1,156 @@
+{% extends "base.html" %} {% block title %}Analyze by File{% endblock %} {%
+block content %}
+<div class="max-w-2xl mx-auto p-6 bg-white shadow-md rounded-lg mt-8">
+  <h2 class="text-2xl font-bold text-gray-800 mb-4">Analyze by File</h2>
+
+  <!-- Input File -->
+  <label class="block text-gray-700 font-semibold mb-2"
+    >Upload File (CSV/XLSX)</label
+  >
+  <input
+    type="file"
+    id="fileInput"
+    accept=".csv,.xlsx"
+    class="w-full border-2 border-orange-500 p-3 rounded-lg shadow-sm focus:ring focus:ring-orange-300"
+  />
+
+  <!-- Button Upload & Analyze -->
+  <button
+    onclick="analyzeFile()"
+    class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg mt-4 w-full transition duration-300"
+  >
+    Analyze File
+  </button>
+
+  <!-- Loader -->
+  <div id="loader" class="text-center mt-4 hidden">
+    <svg
+      class="animate-spin h-6 w-6 text-orange-600 mx-auto"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        class="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        stroke-width="4"
+      ></circle>
+      <path
+        class="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+      ></path>
+    </svg>
+  </div>
+
+  <!-- Output Section -->
+  <div id="fileResult" class="mt-6 p-4 bg-gray-100 rounded-lg shadow-sm">
+    <p class="text-gray-600">Hasil analisis akan ditampilkan di sini...</p>
+  </div>
+</div>
+
+<script>
+  function analyzeFile() {
+    const fileInput = document.getElementById("fileInput");
+    if (!fileInput.files.length) {
+      alert("Pilih file terlebih dahulu!");
+      return;
+    }
+
+    document.getElementById("loader").classList.remove("hidden");
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+
+    fetch("/api/analyze-file", {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        document.getElementById("loader").classList.add("hidden");
+        const resultDiv = document.getElementById("fileResult");
+        resultDiv.innerHTML = "";
+
+        if (data.error) {
+          resultDiv.innerHTML = `<p class='text-red-600'>Error: ${data.error}</p>`;
+          return;
+        }
+
+        if (!data.results || data.results.length === 0) {
+          resultDiv.innerHTML =
+            "<p class='text-gray-700'>Tidak ada aspek yang terdeteksi dalam file.</p>";
+          return;
+        }
+
+        let tableHTML = `<table class='w-full border-collapse border border-gray-300 mt-4'>
+                          <thead>
+                            <tr class='bg-gray-200'>
+                              <th class='border border-gray-300 px-4 py-2'>No</th>
+                              <th class='border border-gray-300 px-4 py-2'>Content</th>
+                              <th class='border border-gray-300 px-4 py-2'>Tampilan</th>
+                              <th class='border border-gray-300 px-4 py-2'>Autentikasi</th>
+                              <th class='border border-gray-300 px-4 py-2'>Transaksi</th>
+                            </tr>
+                          </thead>
+                          <tbody>`;
+
+        data.results.forEach((row, index) => {
+          let tampilanSentimen = "NA";
+          let autentikasiSentimen = "NA";
+          let transaksiSentimen = "NA";
+
+          row.aspects.forEach((aspect) => {
+            if (aspect.name === "Tampilan") {
+              tampilanSentimen = aspect.sentimen;
+            } else if (aspect.name === "Autentikasi") {
+              autentikasiSentimen = aspect.sentimen;
+            } else if (aspect.name === "Transaksi") {
+              transaksiSentimen = aspect.sentimen;
+            }
+          });
+
+          tableHTML += `<tr class='bg-white'>
+                          <td class='border border-gray-300 px-4 py-2'>${
+                            index + 1
+                          }</td>
+                          <td class='border border-gray-300 px-4 py-2'>${
+                            row.review
+                          }</td>
+                          <td class='border border-gray-300 px-4 py-2'><span class='px-2 py-1 rounded ${
+                            tampilanSentimen === "Positive"
+                              ? "bg-green-200"
+                              : tampilanSentimen === "Negative"
+                              ? "bg-red-200"
+                              : "bg-gray-200"
+                          }'>${tampilanSentimen}</span></td>
+                          <td class='border border-gray-300 px-4 py-2'><span class='px-2 py-1 rounded ${
+                            autentikasiSentimen === "Positive"
+                              ? "bg-green-200"
+                              : autentikasiSentimen === "Negative"
+                              ? "bg-red-200"
+                              : "bg-gray-200"
+                          }'>${autentikasiSentimen}</span></td>
+                          <td class='border border-gray-300 px-4 py-2'><span class='px-2 py-1 rounded ${
+                            transaksiSentimen === "Positive"
+                              ? "bg-green-200"
+                              : transaksiSentimen === "Negative"
+                              ? "bg-red-200"
+                              : "bg-gray-200"
+                          }'>${transaksiSentimen}</span></td>
+                        </tr>`;
+        });
+
+        tableHTML += "</tbody></table>";
+        resultDiv.innerHTML = tableHTML;
+      })
+      .catch((error) => {
+        document.getElementById("loader").classList.add("hidden");
+        console.error("Error:", error);
+        document.getElementById(
+          "fileResult"
+        ).innerHTML = `<p class='text-red-600'>Terjadi kesalahan dalam memproses file.</p>`;
+      });
+  }
+</script>
+{% endblock %}

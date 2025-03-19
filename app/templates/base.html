@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Sentiment Aspect Analyzer{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100">
+    <!-- Navbar -->
+    <nav
+      class="bg-orange-500 p-2 pb-2 text-white fixed top-0 left-0 w-full z-50 shadow-md"
+    >
+      <div class="max-w-5xl mx-auto flex justify-between items-center">
+        <!-- Logo + Judul -->
+        <a
+          href="{{ url_for('routes.home') }}"
+          class="flex items-center space-x-3"
+        >
+          <img
+            src="{{ url_for('static', filename='images/logo.png') }}"
+            alt="Logo"
+            class="h-12 w-12 rounded-lg border border-white shadow-md"
+          />
+          <span class="text-lg font-bold">
+            WONDR By BNI - Sentiment Aspect Analyzer
+          </span>
+        </a>
+
+        <!-- Menu Navigasi -->
+        <div class="space-x-4">
+          <a
+            href="{{ url_for('routes.home') }}"
+            class="hover:underline {% if request.path == url_for('routes.home') %}font-bold underline{% endif %}"
+          >
+            Home
+          </a>
+          <a
+            href="{{ url_for('routes.analyze_text') }}"
+            class="hover:underline {% if request.path == url_for('routes.analyze_text') %}font-bold underline{% endif %}"
+          >
+            Analyze by Text
+          </a>
+          <a
+            href="{{ url_for('routes.analyze_file') }}"
+            class="hover:underline {% if request.path == url_for('routes.analyze_file') %}font-bold underline{% endif %}"
+          >
+            Analyze by File
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="max-w-5xl mx-auto p-5 pt-16">
+      {% block content %}{% endblock %}
+    </div>
+  </body>
+</html>
