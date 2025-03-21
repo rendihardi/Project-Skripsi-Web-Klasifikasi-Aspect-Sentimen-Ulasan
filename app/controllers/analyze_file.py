@@ -31,28 +31,21 @@ def api_analyze_file(request):
     try:
         if "file" not in request.files:
             return jsonify({"error": "No file uploaded"}), 400
-
         file = request.files["file"]
         if file.filename == "":
             return jsonify({"error": "No selected file"}), 400
-
         filename = secure_filename(file.filename)
         ext = filename.rsplit(".", 1)[1].lower()
-
         if not allowed_file(filename):
             return jsonify({"error": "Invalid file type. Only CSV/XLSX allowed."}), 400
-
         if ext == "csv":
             df = pd.read_csv(file)
         else:
             df = pd.read_excel(file)
-
         if "review" not in df.columns:
             return jsonify({"error": "File must contain a 'review' column"}), 400
-
         results = []
         preprocessor = Preprocessing()
-
         for review in df["review"].dropna():
             processed_text = preprocessor.preprocess_text(review)
             detected_aspects = []

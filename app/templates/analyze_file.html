@@ -100,7 +100,10 @@ block content %}
           let autentikasiSentimen = "NA";
           let transaksiSentimen = "NA";
 
-          row.aspects.forEach((aspect) => {
+          // Pastikan row.aspects adalah array sebelum forEach()
+          const safeAspects = Array.isArray(row.aspects) ? row.aspects : [];
+
+          safeAspects.forEach((aspect) => {
             if (aspect.name === "Tampilan") {
               tampilanSentimen = aspect.sentimen;
             } else if (aspect.name === "Autentikasi") {
