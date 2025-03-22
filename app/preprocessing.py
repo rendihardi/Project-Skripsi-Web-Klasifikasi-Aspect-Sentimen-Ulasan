@@ -44,9 +44,11 @@ class Preprocessing:
 
     def clean_text(self, text):
         text = text.lower()
-        text = re.sub(r"[^\x00-\x7F]+", "", text)
-        text = re.sub(r"([a-zA-Z0-9])[\.\,\-;:\!]+([a-zA-Z])", r"\1 \2", text)
-        text = re.sub(r"[^a-zA-Z\s]", "", text)
+
+        text = re.sub(r"[^\x00-\x7F]+", "", text)  
+        text = re.sub(r"[^\w\s]", " ", text) 
+        text = re.sub(r"\s+", " ", text).strip()
+        
         return text.strip()
 
     def normalize_text(self, text):
