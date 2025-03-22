@@ -1,5 +1,6 @@
 {% extends "base.html" %} {% block title %}Analyze by File{% endblock %} {%
 block content %}
+
 <div class="max-w-2xl mx-auto p-6 bg-white shadow-md rounded-lg mt-8">
   <h2 class="text-2xl font-bold text-gray-800 mb-4">Analyze by File</h2>
 
@@ -45,8 +46,25 @@ block content %}
   </div>
 
   <!-- Output Section -->
-  <div id="fileResult" class="mt-6 p-4 bg-gray-100 rounded-lg shadow-sm">
-    <p class="text-gray-600">Hasil analisis akan ditampilkan di sini...</p>
+  <div class="mt-6 p-4 bg-gray-100 rounded-lg shadow-sm">
+    <!-- Header dengan tombol Save CSV (Sembunyikan awalnya) -->
+    <div
+      id="analysisHeader"
+      class="hidden flex justify-between items-center mb-2"
+    >
+      <h3 class="text-lg font-semibold text-gray-700">Hasil Analisis</h3>
+      <button
+        id="saveCsvBtn"
+        class="hidden bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+      >
+        Save to CSV
+      </button>
+    </div>
+
+    <!-- Tabel Hasil Analisis -->
+    <div id="fileResult">
+      <p class="text-gray-600">Hasil analisis akan ditampilkan di sini...</p>
+    </div>
   </div>
 </div>
 
@@ -59,6 +77,8 @@ block content %}
     }
 
     document.getElementById("loader").classList.remove("hidden");
+    document.getElementById("analysisHeader").classList.add("hidden");
+    document.getElementById("saveCsvBtn").classList.add("hidden"); // Sembunyikan tombol Save CSV
     const formData = new FormData();
     formData.append("file", fileInput.files[0]);
 
@@ -100,7 +120,6 @@ block content %}
           let autentikasiSentimen = "NA";
           let transaksiSentimen = "NA";
 
-          // Pastikan row.aspects adalah array sebelum forEach()
           const safeAspects = Array.isArray(row.aspects) ? row.aspects : [];
 
           safeAspects.forEach((aspect) => {
@@ -146,6 +165,10 @@ block content %}
 
         tableHTML += "</tbody></table>";
         resultDiv.innerHTML = tableHTML;
+
+        // Tampilkan tombol Save CSV setelah analisis berhasil
+        document.getElementById("analysisHeader").classList.remove("hidden");
+        document.getElementById("saveCsvBtn").classList.remove("hidden");
       })
       .catch((error) => {
         document.getElementById("loader").classList.add("hidden");
@@ -155,5 +178,23 @@ block content %}
         ).innerHTML = `<p class='text-red-600'>Terjadi kesalahan dalam memproses file.</p>`;
       });
   }
+
+  document.getElementById("saveCsvBtn").addEventListener("click", function () {
+    fetch("/download-csv")
+      .then((response) => response.blob())
+      .then((blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "hasil_analisis.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
+  });
 </script>
+
 {% endblock %}

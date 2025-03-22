@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, jsonify, request
+from flask import Blueprint, render_template, request, jsonify, send_file
 from app.controllers.analyze_text import analyze_text_api
 from app.controllers.analyze_file import api_analyze_file
 from app.controllers.chart_data import get_chart_data
+import os
 
 routes = Blueprint("routes", __name__)
 
@@ -28,3 +29,13 @@ def api_analyze_text():
 @routes.route("/api/analyze-file", methods=["POST"])
 def api_analyze_file_route():
     return api_analyze_file(request)
+
+# Route untuk download hasil analisis CSV
+@routes.route("/download-csv")
+def download_csv():
+    file_path = "static/outputs/hasil_analisis.csv"
+
+    try:
+        return send_file(file_path, as_attachment=True)
+    except Exception as e:
+        return f"Error: {str(e)}", 500
