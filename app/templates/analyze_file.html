@@ -47,7 +47,6 @@ block content %}
 
   <!-- Output Section -->
   <div class="mt-6 p-4 bg-gray-100 rounded-lg shadow-sm">
-    <!-- Header dengan tombol Save CSV (Sembunyikan awalnya) -->
     <div
       id="analysisHeader"
       class="hidden flex justify-between items-center mb-2"
@@ -60,14 +59,13 @@ block content %}
         Save to CSV
       </button>
     </div>
-
-    <!-- Tabel Hasil Analisis -->
     <div id="fileResult">
       <p class="text-gray-600">Hasil analisis akan ditampilkan di sini...</p>
     </div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   function analyzeFile() {
     const fileInput = document.getElementById("fileInput");
@@ -78,7 +76,7 @@ block content %}
 
     document.getElementById("loader").classList.remove("hidden");
     document.getElementById("analysisHeader").classList.add("hidden");
-    document.getElementById("saveCsvBtn").classList.add("hidden"); // Sembunyikan tombol Save CSV
+    document.getElementById("saveCsvBtn").classList.add("hidden");
     const formData = new FormData();
     formData.append("file", fileInput.files[0]);
 
@@ -115,6 +113,12 @@ block content %}
                           </thead>
                           <tbody>`;
 
+        const count = {
+          Tampilan: { Positive: 0, Negative: 0 },
+          Autentikasi: { Positive: 0, Negative: 0 },
+          Transaksi: { Positive: 0, Negative: 0 },
+        };
+
         data.results.forEach((row, index) => {
           let tampilanSentimen = "NA";
           let autentikasiSentimen = "NA";
@@ -129,6 +133,13 @@ block content %}
               autentikasiSentimen = aspect.sentimen;
             } else if (aspect.name === "Transaksi") {
               transaksiSentimen = aspect.sentimen;
+            }
+
+            if (
+              count[aspect.name] &&
+              (aspect.sentimen === "Positive" || aspect.sentimen === "Negative")
+            ) {
+              count[aspect.name][aspect.sentimen]++;
             }
           });
 
@@ -166,7 +177,65 @@ block content %}
         tableHTML += "</tbody></table>";
         resultDiv.innerHTML = tableHTML;
 
-        // Tampilkan tombol Save CSV setelah analisis berhasil
+        resultDiv.innerHTML += `
+          <div class="mt-8">
+            <h4 class="text-lg font-semibold text-center mb-4">Grafik Sentimen per Aspek</h4>
+            <canvas id="sentimentChart" height="200"></canvas>
+          </div>
+        `;
+
+        const ctx = document.getElementById("sentimentChart").getContext("2d");
+        new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: ["Tampilan", "Autentikasi", "Transaksi"],
+            datasets: [
+              {
+                label: "Positive",
+                data: [
+                  count.Tampilan.Positive,
+                  count.Autentikasi.Positive,
+                  count.Transaksi.Positive,
+                ],
+                backgroundColor: "rgba(34,197,94,0.7)",
+                borderColor: "rgba(34,197,94,1)",
+                borderWidth: 1,
+              },
+              {
+                label: "Negative",
+                data: [
+                  count.Tampilan.Negative,
+                  count.Autentikasi.Negative,
+                  count.Transaksi.Negative,
+                ],
+                backgroundColor: "rgba(239,68,68,0.7)",
+                borderColor: "rgba(239,68,68,1)",
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: "top",
+              },
+              tooltip: {
+                mode: "index",
+                intersect: false,
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  precision: 0,
+                },
+              },
+            },
+          },
+        });
+
         document.getElementById("analysisHeader").classList.remove("hidden");
         document.getElementById("saveCsvBtn").classList.remove("hidden");
       })
