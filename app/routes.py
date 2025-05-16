@@ -2,6 +2,8 @@ from flask import Blueprint, render_template, request, jsonify, send_file
 from app.controllers.analyze_text import analyze_text_api
 from app.controllers.analyze_file import api_analyze_file
 from app.controllers.chart_data import get_chart_data
+from app.controllers.interpretasi_lime import interpretasi_lime_api
+
 import os
 
 routes = Blueprint("routes", __name__)
@@ -39,3 +41,10 @@ def download_csv():
         return send_file(file_path, as_attachment=True)
     except Exception as e:
         return f"Error: {str(e)}", 500
+
+@routes.route("/api/interpretasi-lime", methods=["POST"])
+def api_interpretasi_lime():
+    print("API /api/interpretasi-lime DI PANGGIL")  # Tambahkan ini
+    return interpretasi_lime_api(request)
+
+
